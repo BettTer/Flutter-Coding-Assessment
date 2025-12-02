@@ -28,7 +28,7 @@ class Tab_Main_RootScreen extends StatelessWidget {
       body: Center(
         child: Text(
           "Welcome! \nTap right message button of navigation bar to enter chat page",
-          textAlign: .center,
+          textAlign: TextAlign.center,
         ),
       ),
     );

@@ -102,48 +102,74 @@ class _ChatBubble extends StatelessWidget {
 
   const _ChatBubble({required this.message});
 
+  Widget buildAvatar(bool isMe) {
+    return Container(
+      margin: EdgeInsets.only(left: isMe ? 8 : 0, right: isMe ? 0 : 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8), // 圆角半径，8表示正方形带圆角
+        child: Image.asset(
+          // 这里根据实际情况替换为你的图片路径
+          isMe ? 'assets/images/IMG_2722.JPG' : 'assets/images/10479785.png',
+          width: 40, // 头像大小
+          height: 40,
+          fit: BoxFit.cover, // 充满容器
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMe = message.isFromMe;
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blue : Colors.grey.shade200,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isMe) buildAvatar(isMe),
+
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: isMe ? Colors.blue : Colors.grey.shade200,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(isMe ? 16 : 4),
+                  topRight: Radius.circular(isMe ? 4 : 16),
+                  bottomLeft: const Radius.circular(16),
+                  bottomRight: const Radius.circular(16),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min, // 让 Column 包裹内容
+                children: [
+                  Text(
+                    message.text,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('MM-dd HH:mm').format(message.timestamp),
+                    style: TextStyle(
+                      color: isMe
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : Colors.black54,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('MM-dd HH:mm').format(message.timestamp),
-              style: TextStyle(
-                color: isMe
-                    ? Colors.white.withValues(alpha: 0.7)
-                    : Colors.black54,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ),
+          if (isMe) buildAvatar(isMe),
+        ],
       ),
     );
   }

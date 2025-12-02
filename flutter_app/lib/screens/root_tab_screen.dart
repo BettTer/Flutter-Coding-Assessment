@@ -14,7 +14,7 @@ class _RootTabScreenState extends State<RootTabScreen> {
 
   final List<Widget> _pages = [
     const Tab_Main_RootScreen(),
-    const Tab_Web_RootScreen(),
+    const DashboardScreen(),
   ];
 
   @override
