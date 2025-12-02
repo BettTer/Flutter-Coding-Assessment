@@ -1,0 +1,15 @@
+<!-- navi -->
+<nav class="bg-slate-800 text-white p-4 shadow-lg sticky top-0 z-50">
+  <div class="flex justify-between items-center max-w-2xl mx-auto">
+    <h1 class="font-bold text-lg">Admin Tools</h1>
+    <div class="flex space-x-4 text-sm font-medium">
+      <a routerLink="/tickets" routerLinkActive="text-blue-400" class="hover:text-blue-300 transition cursor-pointer">Tickets</a>
+      <a routerLink="/editor" routerLinkActive="text-blue-400" class="hover:text-blue-300 transition cursor-pointer">Editor</a>
+      <a routerLink="/logs" routerLinkActive="text-blue-400" class="hover:text-blue-300 transition cursor-pointer">Logs</a>
+    </div>
+  </div>
+</nav>
+
+<main class="p-4 max-w-2xl mx-auto min-h-screen bg-slate-50">
+  <router-outlet></router-outlet>
+</main>
