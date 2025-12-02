@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/message_provider.dart';
 import 'tab_main_chat_screen.dart';
 
 class Tab_Main_RootScreen extends StatelessWidget {

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/message_model.dart';
 import '../providers/message_provider.dart';
 
@@ -18,6 +20,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _handleSend() {
     ref.read(chatProvider.notifier).sendMessage(_textController.text);
     _textController.clear();
+  }
+
+  void _handleImagePick() {
+    // resign keyboard focus
+    FocusScope.of(context).unfocus();
+    ref.read(chatProvider.notifier).sendImage();
   }
 
   @override
@@ -61,67 +69,81 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // 1. list zone
-          Expanded(
-            child: ListView.builder(
-              reverse: true,
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                return _ChatBubble(message: msg);
-              },
+      body: GestureDetector(
+        onTap: () {
+          // Top blank, resign keyboard focus
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            // 1. list zone
+            Expanded(
+              child: ListView.builder(
+                reverse: true,
+                padding: const EdgeInsets.all(16),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  return _ChatBubble(message: msg);
+                },
+              ),
             ),
-          ),
 
-          // 2. input
-          SafeArea(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      decoration: InputDecoration(
-                        hintText: "Type a message...",
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                      ),
-                      onSubmitted: (_) => _handleSend(),
-                      textInputAction: TextInputAction.send,
+            // 2. input
+            SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 5,
+                      offset: const Offset(0, -2),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _handleSend,
-                    icon: const Icon(Icons.send),
-                    color: Colors.blue,
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        decoration: InputDecoration(
+                          hintText: "Type a message...",
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                        ),
+                        onSubmitted: (_) => _handleSend(),
+                        textInputAction: TextInputAction.send,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _handleImagePick,
+                      icon: const Icon(Icons.add_photo_alternate),
+                      color: Colors.blue,
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _handleSend,
+                      icon: const Icon(Icons.send),
+                      color: Colors.blue,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -139,7 +161,6 @@ class _ChatBubble extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8), // 圆角半径，8表示正方形带圆角
         child: Image.asset(
-          // 这里根据实际情况替换为你的图片路径
           isMe ? 'assets/images/IMG_2722.JPG' : 'assets/images/10479785.png',
           width: 40, // 头像大小
           height: 40,
@@ -152,6 +173,23 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMe = message.isFromMe;
+    Widget messageContent;
+
+    if (message.type == MessageType.image) {
+      messageContent = _AsyncLocalImage(
+        relativePath: message.localImagePath ?? "joiweq",
+        heroTag: message.id,
+      );
+    } else {
+      messageContent = Text(
+        message.text,
+        style: TextStyle(
+          color: isMe ? Colors.white : Colors.black87,
+          fontSize: 16,
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
@@ -176,15 +214,9 @@ class _ChatBubble extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min, // 让 Column 包裹内容
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 16,
-                    ),
-                  ),
+                  messageContent,
                   const SizedBox(height: 4),
                   Text(
                     DateFormat('MM-dd HH:mm').format(message.timestamp),
@@ -202,6 +234,126 @@ class _ChatBubble extends StatelessWidget {
           if (isMe) buildAvatar(isMe),
         ],
       ),
+    );
+  }
+}
+
+class _FullScreenImageViewer extends StatelessWidget {
+  final File imageFile;
+  final String heroTag;
+
+  const _FullScreenImageViewer({
+    required this.imageFile,
+    required this.heroTag,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4,
+              child: Hero(tag: heroTag, child: Image.file(imageFile)),
+            ),
+          ),
+
+          Positioned(
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 将此代码粘贴到 chat_screen.dart 最底部
+
+class _AsyncLocalImage extends StatelessWidget {
+  final String relativePath;
+  final String heroTag;
+
+  const _AsyncLocalImage({required this.relativePath, required this.heroTag});
+
+  Future<File?> _getFullFile() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final fullPath = '${appDir.path}/$relativePath';
+    final file = File(fullPath);
+
+    if (await file.exists()) {
+      return file;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<File?>(
+      future: _getFullFile(),
+      builder: (context, snapshot) {
+        // 1. calculating
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            width: 150,
+            height: 150,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+
+        // 2.
+        if (snapshot.hasData && snapshot.data != null) {
+          final file = snapshot.data!;
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      _FullScreenImageViewer(imageFile: file, heroTag: heroTag),
+                ),
+              );
+            },
+            child: Hero(
+              tag: heroTag,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  file,
+                  width: 150,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          );
+        }
+
+        // 3. missing
+        return Container(
+          width: 150,
+          height: 150,
+          color: Colors.grey.shade300,
+          alignment: Alignment.center,
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.broken_image, color: Colors.grey),
+              Text("Image Lost", style: TextStyle(fontSize: 10)),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -10,6 +10,7 @@ void main() async {
 
   await Hive.initFlutter();
   Hive.registerAdapter(SingleMessageAdapter());
+  Hive.registerAdapter(MessageTypeAdapter());
   await Hive.openBox<SingleMessage>('chat_history');
 
   runApp(const ProviderScope(child: MyApp()));

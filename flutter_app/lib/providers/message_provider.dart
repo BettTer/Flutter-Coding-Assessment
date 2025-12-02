@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import '../models/message_model.dart';
 import '../shared/shared_library.dart';
@@ -10,6 +14,7 @@ const _uuid = Uuid();
 
 class ChatNotifier extends Notifier<List<SingleMessage>> {
   Box<SingleMessage> get _box => Hive.box<SingleMessage>('chat_history');
+  final ImagePicker _picker = ImagePicker();
 
   @override
   List<SingleMessage> build() {
@@ -25,6 +30,21 @@ class ChatNotifier extends Notifier<List<SingleMessage>> {
     }
   }
 
+  Future<Directory> _fetchCachedImagesDir() async {
+    final appDirectory = await getApplicationDocumentsDirectory();
+    final imagesDirPath = '${appDirectory.path}/$_fetchCachedImagesFolderName';
+    final imagesDir = Directory(imagesDirPath);
+    return imagesDir;
+  }
+
+  String _fetchCachedImageRelativePath(String fileName) {
+    return '$_fetchCachedImagesFolderName/$fileName';
+  }
+
+  String _fetchCachedImagesFolderName() {
+    return 'chat_images';
+  }
+
   Future<void> sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
@@ -34,14 +54,44 @@ class ChatNotifier extends Notifier<List<SingleMessage>> {
       isFromMe: true,
       timestamp: DateTime.now(),
     );
-
-    // ⚠️ Save & change state
-    await _box.add(newMessage);
-    state = [newMessage, ...state];
+    _updateHiveAndStateAsync(newMessage);
 
     // 2. 模拟网络延迟和客服回复
     await Future.delayed(const Duration(seconds: 1));
     _simulateAutoReply(newMessage);
+  }
+
+  // * send Image
+  Future<void> sendImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+      );
+      // did cancel
+      if (pickedFile == null) return;
+      final imagesDir = await _fetchCachedImagesDir();
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
+      }
+      // rename
+      final fileName = '${_uuid.v4()}${path.extension(pickedFile.path)}';
+      final _ = await File(pickedFile.path).copy('${imagesDir.path}/$fileName');
+
+      final newImageMessage = SingleMessage(
+        id: _uuid.v4(),
+        text: "",
+        isFromMe: true,
+        timestamp: DateTime.now(),
+        type: MessageType.image,
+        localImagePath: _fetchCachedImageRelativePath(fileName),
+      );
+      _updateHiveAndStateAsync(newImageMessage);
+
+      await Future.delayed(const Duration(seconds: 1));
+      _simulateAutoReply(newImageMessage);
+    } catch (e) {
+      Log.e("Send Image failed");
+    }
   }
 
   void _simulateAutoReply(SingleMessage prevMessage) {
@@ -51,13 +101,19 @@ class ChatNotifier extends Notifier<List<SingleMessage>> {
       2: "Good luck. See you.",
     };
 
-    final randomTextID = Random().nextInt(repliesMap.length);
-    var replyText = repliesMap[randomTextID]!;
-    if (randomTextID == 0) {
-      String dateTimeStr = DateFormat(
-        'yyyy-MM-dd HH:mm:ss',
-      ).format(prevMessage.timestamp);
-      replyText = "$replyText ${prevMessage.text}, time: $dateTimeStr";
+    var replyText = "";
+    if (prevMessage.type == MessageType.image) {
+      replyText = "You sent me a cool image.";
+    } else {
+      final randomTextID = Random().nextInt(repliesMap.length);
+
+      replyText = repliesMap[randomTextID]!;
+      if (randomTextID == 0) {
+        String dateTimeStr = DateFormat(
+          'yyyy-MM-dd HH:mm:ss',
+        ).format(prevMessage.timestamp);
+        replyText = "$replyText ${prevMessage.text}, time: $dateTimeStr";
+      }
     }
 
     final replyMessage = SingleMessage(
@@ -67,19 +123,7 @@ class ChatNotifier extends Notifier<List<SingleMessage>> {
       timestamp: DateTime.now(),
     );
 
-    // ⚠️ Save & change state
-    _box.add(replyMessage);
-    state = [replyMessage, ...state];
-  }
-
-  Future<void> clearMessages() async {
-    await _box.clear();
-    state = [];
-
-    await Future.delayed(const Duration(seconds: 1));
-    final welcomeMsg = _generateFirstMessage();
-    await _box.add(welcomeMsg);
-    state = [welcomeMsg, ...state];
+    _updateHiveAndState(replyMessage);
   }
 
   SingleMessage _generateFirstMessage() {
@@ -89,6 +133,31 @@ class ChatNotifier extends Notifier<List<SingleMessage>> {
       isFromMe: false,
       timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
     );
+  }
+
+  void _updateHiveAndState(SingleMessage newMessage) {
+    _box.add(newMessage);
+    state = [newMessage, ...state];
+  }
+
+  Future<void> _updateHiveAndStateAsync(SingleMessage newMessage) async {
+    await _box.add(newMessage);
+    state = [newMessage, ...state];
+  }
+
+  Future<void> clearMessages() async {
+    await _box.clear();
+    state = [];
+
+    final imagesDir = await _fetchCachedImagesDir();
+    if (await imagesDir.exists() == true) {
+      await imagesDir.delete(recursive: true);
+      Log.i("deleted cached images");
+    }
+
+    await Future.delayed(const Duration(seconds: 1));
+    final welcomeMsg = _generateFirstMessage();
+    _updateHiveAndState(welcomeMsg);
   }
 }
 
