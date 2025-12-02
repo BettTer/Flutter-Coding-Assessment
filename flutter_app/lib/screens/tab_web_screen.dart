@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (Platform.isAndroid) {
       dashboardUrl = "http://10.0.2.2:4200";
     } else {
-      dashboardUrl = "http://localhost:4200";
+      dashboardUrl = "http://192.168.1.106:4200/";
     }
 
     // 2. 初始化 WebView Controller
