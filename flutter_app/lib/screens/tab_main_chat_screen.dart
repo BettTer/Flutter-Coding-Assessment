@@ -29,6 +29,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: const Text("Chat Page"),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear History',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Clear All?"),
+                  content: const Text(
+                    "This will delete all messages permanently.",
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ref.read(chatProvider.notifier).clearMessages();
+                        Navigator.pop(ctx);
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: const Text("Delete"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
