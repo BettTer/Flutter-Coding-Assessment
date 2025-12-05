@@ -47,12 +47,12 @@ The application includes logic to automatically identify the running platform to
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2975.png" width="100%" />
+      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2975.PNG" width="100%" />
       <br />
       <b>Chat Page</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2976.png" width="100%" />
+      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2976.PNG" width="100%" />
       <br />
       <b>Clear History</b>
     </td>
@@ -63,17 +63,17 @@ The application includes logic to automatically identify the running platform to
   <tr>
     </td>
       <td align="center">
-      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2974.png" width="100%" />
+      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2974.PNG" width="100%" />
       <br />
       <b>Tickets</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2973.png" width="100%" />
+      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2973.PNG" width="100%" />
       <br />
       <b>Editor</b>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2972.png" width="100%" />
+      <img src="https://raw.githubusercontent.com/BettTer/Flutter-Coding-Assessment/refs/heads/main/Screenshots/IMG_2972.PNG" width="100%" />
       <br />
       <b>Logs</b>
   </tr>
